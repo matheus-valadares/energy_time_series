@@ -10,6 +10,7 @@ from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 
 from statsmodels.tsa.stattools import adfuller
 from sklearn.metrics import mean_absolute_error, mean_squared_error
+from scipy import stats
 
 #__________________________________________________________________________________________________________________________________
 #________________________________________________________SPECIFIC FUNCTIONS________________________________________________________
@@ -82,7 +83,7 @@ def filter_df(df):
 #__________________________________________________________________________________________________________________________________
 #________________________________________________________PLOTTING FUNCTIONS________________________________________________________
 #__________________________________________________________________________________________________________________________________
-def plot_decomposition(df, seasonality='multiplicative'):
+def plot_decomposition(df, seasonality='multiplicative', title=''):
     """
     Decomposes the time series by the chosen method (multiplicative or additive) into Trend, Seasonality, and Residuals.
     Plots, respectively, the original Time Series, its Trend, Seasonality, and Residuals.
@@ -93,10 +94,12 @@ def plot_decomposition(df, seasonality='multiplicative'):
     """
     decomposition = seasonal_decompose(df, model=seasonality, extrapolate_trend=0)
 
-    plt.figure(figsize=(15, 10))
+    plt.figure(figsize=(15, 12))
 
     plt.subplot(411)
     plt.plot(df.index, df.values)
+    title = ' ' + title
+    plt.title(f'Decomposition of the{title} time series', fontsize=15)
     plt.ylabel('Time Series')
 
     plt.subplot(412)
@@ -110,8 +113,57 @@ def plot_decomposition(df, seasonality='multiplicative'):
     plt.subplot(414)
     plt.plot(decomposition.resid.index, decomposition.resid.values)
     plt.ylabel('Residuals')
+    
+    plt.tight_layout()
+
+
+def plot_differentiation(df, differentiation=1):
+    """
+    Plots the differentiated time series, and the histogram of its frequencies.
+
+    Args:
+        df (pandas dataframe): single column dataframe with datetime index
+        differentiation (int): number of differentiations to be applied to the time series
+    """
+    # Data
+    if differentiation <= 0:
+        data = df
+    else:
+        data = df.diff(differentiation).dropna()
+
+    # Differentiated series
+    plt.figure(figsize=(15, 5))
+
+    plt.subplot(211)
+    sns.lineplot(data=data, dashes=False)
+    plt.title(f'Differentiated time series | {differentiation} diff', fontsize=15)
+    plt.ylabel('Time Series')
+    plt.legend('')
+
+    # Histogram of the differentiated series
+    plt.subplot(212)
+    sns.histplot(data=data)
+    plt.ylabel('Distribution')
 
     plt.tight_layout()
+
+
+def plot_correlation(df, method='spearman'):
+    """
+    Plot the correlation matrix using the specified method.
+
+    Parameters:
+        df (DataFrame): Pandas DataFrame containing the data for correlation computation.
+        method (str, optional): Method of correlation. Defaults to 'spearman'. Other options include 'pearson' and 'kendall'.
+
+    Returns:
+        None. Displays a heatmap of the correlation matrix.
+    """
+    df = df.corr(method=method)
+    mask = np.triu(df)
+    sns.heatmap(df, annot=True, vmin=-1, vmax=1, mask=mask, cmap='YlGnBu')
+    plt.title('Spearman Correlation', fontsize=15)
+    plt.show()
 
 
 def plot_autocorrelation(df, lags=None):
@@ -128,36 +180,12 @@ def plot_autocorrelation(df, lags=None):
 
     plt.subplot(211)
     plot_acf(df, lags=lags, ax=plt.gca())
-    plt.title(f'ACF | {lags} Lags')
+    plt.title(f'ACF | {lags} Lags', fontsize=15)
 
     lags = int(lags/2)
     plt.subplot(212)
     plot_pacf(df, lags=lags, ax=plt.gca())
-    plt.title(f'PACF | {lags} Lags')
-
-    plt.tight_layout()
-
-
-def plot_differentiation(df):
-    """
-    Plots the differentiated time series, and the histogram of its frequencies.
-
-    Args:
-        df (pandas dataframe): single column dataframe with datetime index
-    """
-    # Differentiated series
-    plt.figure(figsize=(15, 5))
-
-    plt.subplot(211)
-    sns.lineplot(data=df.diff(1), dashes=False)
-    plt.title('Differentiation', fontsize=15)
-    plt.ylabel('Time Series')
-    plt.legend('')
-
-    # Histogram of the differentiated series
-    plt.subplot(212)
-    sns.histplot(data=df.diff(1))
-    plt.ylabel('Distribution')
+    plt.title(f'PACF | {lags} Lags', fontsize=15)
 
     plt.tight_layout()
 
@@ -179,6 +207,84 @@ def plot_lag_scatter(df, lags=1):
 #__________________________________________________________________________________________________________________________________
 #__________________________________________________________EXPERIMENTATION_________________________________________________________
 #__________________________________________________________________________________________________________________________________
+def adf_test(series, title=''):
+    """
+    Takes a time series and returns a report of the Augmented Dickey-Fuller (ADF) test.
+
+    Args:
+        series (pandas series): time series
+        title (str): optional title
+    Returns:
+        Interpretation of the stationarity test results
+    """
+    
+    differenciation = 0
+    print(f'Augmented Dickey-Fuller Test: {title}')
+    print(f'Differentiation: {differenciation}')
+    result = adfuller(series, autolag='AIC')
+
+    labels = ['ADF test statistic', 'p-value', '# lags used', '# observations']
+    output = pd.Series(result[0:4], index=labels)
+    for key, val in result[4].items():
+        output[f'critical value ({key})'] = val
+    print(output.to_string())
+
+    if result[1] <= 0.05:
+        print("Rejects the null hypothesis")
+        print("Data does NOT have a unit root and IS stationary")
+    else:
+        print("Does not reject the null hypothesis")
+        print("Data HAS a unit root and IS NOT stationary")
+        
+        result = {}
+        result[1] = 1
+        while result[1] > 0.05:
+            differenciation += 1
+            print(f'\n\nDifferentiation: {differenciation}')
+            data = series.diff(differenciation).dropna()
+            result = adfuller(data, autolag='AIC') # .dropna() deals with differentiated data
+
+            labels = ['ADF test statistic', 'p-value', '# lags used', '# observations']
+            output = pd.Series(result[0:4], index=labels)
+
+            for key, val in result[4].items():
+                output[f'critical value ({key})'] = val
+
+            print(output.to_string())          # .to_string() removes "dtype: float64"
+
+            if result[1] <= 0.05:
+                print("Rejects the null hypothesis")
+                print("Data does NOT have a unit root and IS stationary")
+            else:
+                print("Does not reject the null hypothesis")
+                print("Data HAS a unit root and IS NOT stationary")
+
+
+def perform_normality_tests(data):
+    """
+    Perform the Shapiro-Wilk test on a dataset.
+    
+    Parameters:
+        data: Pandas Series, the dataset to test for normality.
+    
+    Returns:
+        A print statement containing the results for the normality test.
+    """
+
+    # Shapiro-Wilk Test
+    shapiro_stat, shapiro_p = stats.shapiro(data)
+
+    print('Shapiro-Wilk Test')
+    print(f'Test Statistic: {shapiro_stat:.4f}\np-value: {shapiro_p:.4f}')
+    
+    if shapiro_p > 0.05:
+        print("Does not reject the null hypothesis")
+        print("Data does IS normally distributed\n")
+    else:
+        print("Rejects the null hypothesis")
+        print("Data does IS NOT normally distributed\n")
+
+
 def error_statistics(series, predictions):
     """
     Takes the actual series and prediction to return error statistics.
@@ -232,32 +338,3 @@ def model_evaluation(main_dataframe, test_data, test_predictions, title='Forecas
     plt.plot(main_dataframe, label='Real', color='orange')
     plt.plot(test_predictions, label='Forecast', color='green')
     plt.show()
-
-
-def adf_test(series, title=''):
-    """
-    Takes a time series and returns a report of the Augmented Dickey-Fuller (ADF) test.
-
-    Args:
-        series (pandas series): time series
-        title (str): optional title
-    Returns:
-        Interpretation of the stationarity test results
-    """
-    print(f'Augmented Dickey-Fuller Test: {title}')
-    result = adfuller(series.dropna(), autolag='AIC') # .dropna() deals with differentiated data
-
-    labels = ['ADF test statistic', 'p-value', '# lags used', '# observations']
-    output = pd.Series(result[0:4], index=labels)
-
-    for key, val in result[4].items():
-        output[f'critical value ({key})'] = val
-
-    print(output.to_string())          # .to_string() removes "dtype: float64"
-
-    if result[1] <= 0.05:
-        print("Rejects the null hypothesis")
-        print("Data does NOT have a unit root and IS stationary")
-    else:
-        print("Does not reject the null hypothesis")
-        print("Data HAS a unit root and IS NOT stationary")
