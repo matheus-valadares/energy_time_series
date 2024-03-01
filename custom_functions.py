@@ -148,21 +148,25 @@ def plot_differentiation(df, differentiation=1):
     plt.tight_layout()
 
 
-def plot_correlation(df, method='spearman'):
+def plot_correlation(df, title='', method='spearman'):
     """
     Plot the correlation matrix using the specified method.
 
     Parameters:
         df (DataFrame): Pandas DataFrame containing the data for correlation computation.
+        title (str, optional): Title of the graph. Defaults to ''.
         method (str, optional): Method of correlation. Defaults to 'spearman'. Other options include 'pearson' and 'kendall'.
 
     Returns:
         None. Displays a heatmap of the correlation matrix.
     """
+    if title == '':
+        title = 'Spearman Correlation'
+
     df = df.corr(method=method)
     mask = np.triu(df)
     sns.heatmap(df, annot=True, vmin=-1, vmax=1, mask=mask, cmap='YlGnBu')
-    plt.title('Spearman Correlation', fontsize=15)
+    plt.title(title, fontsize=15)
     plt.show()
 
 
