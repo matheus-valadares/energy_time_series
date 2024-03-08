@@ -1,4 +1,4 @@
-# Time Series Analysis and Forecast: Brazil's Energy Consumption Data
+# Time Series Analysis and Forecast: Brazil's Electric Energy Consumption Data
 
 🔍 About the project
 

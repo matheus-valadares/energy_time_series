@@ -208,6 +208,25 @@ def plot_lag_scatter(df, lags=1):
     plt.show()
 
 
+def plot_train_test_split(train_data, test_data, title='Train/Test Split'):
+    """
+    Plot a comparison of training and testing datasets.
+
+    Parameters:
+        train_data: Series or DataFrame containing the training data to be plotted.
+        test_data: Series or DataFrame containing the testing data to be plotted.
+        title (str, optional): Title of the plot. Defaults to 'Train/Test Split'.
+
+    Returns:
+        None. This function displays a plot of the training and testing datasets with appropriate legends and colors.
+    """
+    plt.figure(figsize=(25, 8))
+    plt.plot(train_data, label='Train', color='#404788')
+    plt.plot(test_data, label='Test', color='#55C667')
+    plt.title(title, fontsize=15)
+    plt.legend(loc='upper left', fontsize=12)
+    plt.show()
+
 #__________________________________________________________________________________________________________________________________
 #__________________________________________________________EXPERIMENTATION_________________________________________________________
 #__________________________________________________________________________________________________________________________________
@@ -333,12 +352,12 @@ def model_evaluation(main_dataframe, test_data, test_predictions, title='Forecas
     plt.figure(figsize=(25, 10))
 
     plt.subplot(211)
-    plt.plot(test_data, label='Real', color='orange')
-    plt.plot(test_predictions, label='Forecast', color='green')
+    plt.plot_date(test_data.index, test_data.values, '-', label='Real', color='#440154')
+    plt.plot_date(test_data.index, test_predictions, '--', label='Forecast', color='#238A8D')
     plt.title(title, fontsize=15)
     plt.legend(loc='upper left', fontsize=12)
 
     plt.subplot(212)
-    plt.plot(main_dataframe, label='Real', color='orange')
-    plt.plot(test_predictions, label='Forecast', color='green')
+    plt.plot_date(main_dataframe.index, main_dataframe.values, '-', label='Real', color='#440154')
+    plt.plot_date(test_data.index, test_predictions, '--', label='Forecast', color='#238A8D')
     plt.show()
