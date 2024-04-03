@@ -1,4 +1,4 @@
-# Time Series Analysis and Forecasting: Electricity Consumption in Brazil
+# Time Series Analysis and Forecasting: Electricity Consumption in Brazil (WIP)
 
 ## Introduction
 Energy planning plays a critical role in the evolution of the electricity supply system in Brazil, covering, among other aspects, the sizing and specification of new lines and power transmission substations. A mismatch or lack of precision in this planning, in terms of meeting domestic demand, can lead to a significant increase in costs for the end consumer. This increase in costs can occur due to the need to resort to more expensive energy production methods or to the importation of this input from neighboring countries.
