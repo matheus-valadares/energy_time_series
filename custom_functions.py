@@ -83,7 +83,7 @@ def filter_df(df):
 #__________________________________________________________________________________________________________________________________
 #________________________________________________________PLOTTING FUNCTIONS________________________________________________________
 #__________________________________________________________________________________________________________________________________
-def plot_decomposition(df, seasonality='multiplicative', title=''):
+def plot_decomposition(df, seasonality='additive', title=''):
     """
     Decomposes the time series by the chosen method (multiplicative or additive) into Trend, Seasonality, and Residuals.
     Plots, respectively, the original Time Series, its Trend, Seasonality, and Residuals.
